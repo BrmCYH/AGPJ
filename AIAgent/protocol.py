@@ -1,9 +1,8 @@
 import time
 from enum import Enum, unique
-from typing import List, Optional, Dict, Union
+from typing import List, Optional, Dict, Union, Callable, Literal
 
 from pydantic import BaseModel, Field
-from typing_extensions import Literal, Required
 
 
 @unique
@@ -21,17 +20,19 @@ class Finish(str, Enum):
     LENGTH = "length"
     TOOL = "tool_calls"
 
+class ChatMessage(BaseModel):
+    role: Optional[Role]
+    content: str
 
-class ModelCard(BaseModel):
-    id: str
-    object: Literal["model"] = "model"
-    created: int = Field(default_factory=lambda: int(time.time()))
-    owned_by: Literal["owner"] = "owner"
-
-
-class ModelList(BaseModel):
-    object: Literal["list"] = "list"
-    data: List[ModelCard] = []
+class ToolMessage(BaseModel):
+    role: Optional[Role]
+    content: str
+    name: str
+    
+ChatCompletionMessages = Union[
+    ChatMessage,
+    ToolMessage,
+]
 
 
 class Function(BaseModel):
@@ -45,25 +46,11 @@ class FunctionCall(BaseModel):
     function: Function
 
 
-class ChatMessage(BaseModel):
-    role: Optional[Role]
-    content: str
-
-class ToolMessage(BaseModel):
-    role: Optional[Role]
-    content: str
-    name: str
 
 class ChatCompletionMessage(BaseModel):
     role: Optional[Role] = None
     content: Optional[str] = None
     tool_calls: Optional[List[FunctionCall]] = None
-
-ChatCompletionMessages = Union[
-    ChatMessage,
-    ToolMessage,
-]
-
 
 
 
@@ -125,3 +112,20 @@ class ScoreEvaluationResponse(BaseModel):
     object: Literal["score.evaluation"] = "score.evaluation"
     model: str
     scores: List[float]
+
+# Model List
+class ModelCard(BaseModel):
+    id: str
+    object: Literal["model"] = "model"
+    created: int = Field(default_factory=lambda: int(time.time()))
+    owned_by: Literal["owner"] = "owner"
+
+
+class ModelList(BaseModel):
+    object: Literal["list"] = "list"
+    data: List[ModelCard] = []
+
+class Tool(BaseModel):
+    name: str
+    function: Callable
+

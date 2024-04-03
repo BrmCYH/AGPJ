@@ -1,141 +1,17 @@
 [
-    {
+  {
       "type": "function",
       "function": {
-        "name": "get_current_weather",
-        "description": "Get the current weather",
-        "parameters": {
-          "type": "object",
-          "properties": {
-            "location": {
-              "type": "string",
-              "description": "The city and state, e.g. San Francisco, CA"
-            },
-            "format": {
-              "type": "string",
-              "enum": [
-                "celsius",
-                "fahrenheit"
-              ],
-              "description": "The temperature unit to use. Infer this from the users location."
-            }
-          },
-          "required": [
-            "location",
-            "format"
-          ]
-        }
+          "name": "calculate_gpa",
+          "description": "根据课程成绩和学时计算 GPA",
+          "parameters": {
+              "type": "object",
+              "properties": {
+                  "grades": {"type": "array", "items": {"type": "string"}, "description": "课程成绩"},
+                  "hours": {"type": "array", "items": {"type": "integer"}, "description": "课程学时"}
+              },
+              "required": ["grades", "hours"]
+          }
       }
-    },
-    {
-      "type": "function",
-      "function": {
-        "name": "get_n_day_weather_forecast",
-        "description": "Get an N-day weather forecast",
-        "parameters": {
-          "type": "object",
-          "properties": {
-            "location": {
-              "type": "string",
-              "description": "The city and state, e.g. San Francisco, CA"
-            },
-            "format": {
-              "type": "string",
-              "enum": [
-                "celsius",
-                "fahrenheit"
-              ],
-              "description": "The temperature unit to use. Infer this from the users location."
-            },
-            "num_days": {
-              "type": "integer",
-              "description": "The number of days to forecast"
-            }
-          },
-          "required": [
-            "location",
-            "format",
-            "num_days"
-          ]
-        }
-      }
-    },
-    {
-      "type": "function",
-      "function": {
-        "name": "book_sport_facility",
-        "description": "Book various types of sports facilities for a specified time and purpose",
-        "parameters": {
-          "type": "object",
-          "properties": {
-            "student_name": {
-              "type": "string",
-              "description": "Name of the person making the reservation"
-            },
-            "department": {
-              "type": "string",
-              "description": "Department of student who is making the reservation, including SDS, SSE, SME, HSS, MED, and MUS"
-            },
-            "email": {
-              "type": "string",
-              "format": "email",
-              "description": "Email address of the student for reservation confirmation, must end in @link.cuhk.edu.cn"
-            },
-            "phone_number": {
-              "type": "string",
-              "description": "Contact phone number for the student"
-            },
-            "subject": {
-              "type": "string",
-              "description": "Subject or title of the event"
-            },
-            "facility_type": {
-              "type": "string",
-              "enum": [
-                "badminton",
-                "tennis",
-                "table tennis",
-                "climbing"
-              ],
-              "description": "Type of sports facility required"
-            },
-            "court_number": {
-              "type": "string",
-              "description": "Specific the number of the badminton court"
-            },
-            "start_time": {
-              "type": "string",
-              "format": "date-time",
-              "description": "The starting time for the reservation"
-            },
-            "end_time": {
-              "type": "string",
-              "format": "date-time",
-              "description": "The ending time for the reservation"
-            },
-            "number_of_participants": {
-              "type": "integer",
-              "description": "The number of people expected to participate, should not exceed 6"
-            },
-            "purpose": {
-              "type": "string",
-              "description": "Explanation of the purpose for the reservation"
-            }
-          },
-          "required": [
-            "student_name",
-            "department",
-            "email",
-            "phone_number",
-            "subject",
-            "facility_type",
-            "court_number",
-            "start_time",
-            "end_time",
-            "number_of_participants",
-            "purpose"
-          ]
-        }
-      }
-    }
-  ]
+  }
+]

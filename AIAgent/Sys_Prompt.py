@@ -3,10 +3,12 @@
 '''
 from typing import Optional,List,Literal,Dict
 from dataclasses import dataclass
+
 @dataclass
 class Template:
     role: Literal['system']
     content: str
+
 templates:Dict[str,Template]={}
 def _register_sys_template(
     name: str,
@@ -25,7 +27,7 @@ _register_sys_template(
 def get_template(name:str=None,identity:str=None,organization:str=None):
     if not( name or identity or organization):
         
-        return [{'role':'system',"content":'A chat between a curious user and an artificial intelligence assistant. '}]
+        return []
     if name:
         if name in templates.keys():
             return list(templates[name])

@@ -6,7 +6,7 @@ from Sys_Prompt import get_template
 from protocol import ChatMessage
 from litellm import acompletion
 from tenacity import retry, wait_random_exponential, stop_after_attempt
-from protocol import ChatCompletionMessages, ChatCompletionResponse, FunctionCall, ToolMessage, Function
+from protocol import ChatCompletionMessages, ChatCompletionResponse, FunctionCall, ToolMessage, Function, Tool
 
 @dataclass
 class Response:
@@ -42,15 +42,14 @@ class AssistantAgent(object):
         4. 建立连接接口 OpenAI
     '''
     def __init__(self,
-                api_key : Union[str|None],
-                url : Union[str|None],
-                tools : List[Union[Dict|None]],
-                tool_map: Dict[str,Callable],
                 model : str,
-                organization : Union[str|None]=None,
-                name : Union[str|None]=None,
-                identity : Union[str|None]=None,
-                
+                api_key : Optional[Union[str,None]] = None,
+                url : Union[str,None]= None,
+                tools : List[Dict]=None,
+                tool_map: Optional[Dict[str,Callable]]=None,
+                organization : Union[str,None]=None,
+                name : Union[str,None]=None,
+                identity : Union[str,None]=None,
                 ):
         if not url:
             try:
@@ -97,8 +96,7 @@ class AssistantAgent(object):
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
-                tools=self.tools,
-                tool_choice=tool_choice
+                tools=self.tools
             )
             return response
         except Exception as e:
@@ -107,25 +105,22 @@ class AssistantAgent(object):
 
     async def _call(self,
             messages:List[ChatCompletionMessages],
-            ) ->List[Iterable[ChatCompletionMessages]]:
+            ) ->List[ChatCompletionMessages]:
         response = self.chat_completion_request(messages=messages)
 
-        if response.choices[0].finish_reason == 'stop':
-            messages.append(ChatMessage(role=response.choices[0].message.role,content=response.choices[0].message.content))
-            return messages
-        
-        try: 
-            tool_calls = response.choices[0].message.tool_calls
-        except:
-            raise 'Tool call error!\nmessage:{response.choices[0].message}!'
-        print(response)
-        messages.extend([
-           await self.execute_func_call(
-                    FunctionCall( type=tool_call.type, function= Function(name=tool_call.function.name, arguments=tool_call.function.arguments))
-                )for tool_call in tool_calls]
-        )
-        print(messages)
-        result = self.chat_completion_request(messages=messages)
-        messages.append(ChatMessage(role=result.choices[0].message.role,content= f'{result.choices[0].message.content}'))
+        if response.choices[0].finish_reason == 'tool_calls':
+            try: 
+                tool_calls = response.choices[0].message.tool_calls
+            except:
+                raise 'Tool call error!\nmessage:{response.choices[0].message}!'
+            
+            messages.extend([
+            await self.execute_func_call(
+                        tool_call
+                    )for tool_call in tool_calls]
+            )
+
+            response = self.chat_completion_request(messages=messages)
+        messages.append(ChatMessage(role=response.choices[0].message.role,content=f'{response.choices[0].message.content}'))
         return messages
     
