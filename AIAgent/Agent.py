@@ -3,10 +3,10 @@ from typing import Literal, List, Optional, Union, Sequence, Dict, Callable, Ite
 import os,json
 from dataclasses import dataclass
 from Sys_Prompt import get_template
-from protocol import ChatMessage
+
 from litellm import acompletion
 from tenacity import retry, wait_random_exponential, stop_after_attempt
-from protocol import ChatCompletionMessages, ChatCompletionResponse, FunctionCall, ToolMessage, Function, Tool
+from protocol import ChatCompletionMessages, ChatCompletionResponse, FunctionCall, ToolMessage, Function, Tool, AssistantMessage, ChatMessage
 
 @dataclass
 class Response:
@@ -70,7 +70,8 @@ class AssistantAgent(object):
         self.model = model
 
 
-    async def execute_func_call(self,tool_call: FunctionCall) -> ToolMessage:
+    async def execute_func_call(self,tool_call: FunctionCall) -> List[ChatCompletionMessages]:
+        func_call=[]
         try:
             function_to_call = self.tool_map.get(tool_call.function.name)
         except ValueError:
@@ -85,9 +86,12 @@ class AssistantAgent(object):
                     **function_args
                 )
         except:
+            func_call.append(AssistantMessage(role = 'assistant', content = None, function_call = Function(name=f"{tool_call.function.name}",arguments=f"{tool_call.function.arguments}")))
+            func_call.append(ToolMessage(role ='function', name = f'{tool_call.function.name}', content = f"{function_response}"))
             raise f'Error: function {function_to_call} run error,detail{tool_call}'
-            
-        return {"role":"function","name":tool_call.function.name,"content":f"{function_response}"}
+        func_call.append(AssistantMessage(role = 'assistant', content = None, function_call = Function(name=f"{tool_call.function.name}",arguments=f"{tool_call.function.arguments}")))
+        func_call.append(ToolMessage(role ='function', name = f'{tool_call.function.name}', content = f"{function_response}"))
+        return func_call
             
     
     @retry(wait= wait_random_exponential(multiplier=1, max=40), stop=stop_after_attempt(3))
@@ -113,14 +117,15 @@ class AssistantAgent(object):
                 tool_calls = response.choices[0].message.tool_calls
             except:
                 raise 'Tool call error!\nmessage:{response.choices[0].message}!'
-            
-            messages.extend([
-            await self.execute_func_call(
-                        tool_call
-                    )for tool_call in tool_calls]
-            )
-
+            for tool_call in tool_calls:
+                messages.extend(
+                    await self.execute_func_call(
+                                tool_call
+                            )
+                )
+            print(messages)
             response = self.chat_completion_request(messages=messages)
-        messages.append(ChatMessage(role=response.choices[0].message.role,content=f'{response.choices[0].message.content}'))
+            print(response)
+        messages.append(AssistantMessage(role = response.choices[0].message.role,content = f'{response.choices[0].message.content}', function_call=response.choices[0].message.function_call))
         return messages
     

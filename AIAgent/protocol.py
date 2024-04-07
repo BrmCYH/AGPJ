@@ -13,6 +13,10 @@ class Role(str, Enum):
     FUNCTION = "function"
     TOOL = "tool"
 
+class Function(BaseModel):
+    name: str
+    arguments: str
+
 
 @unique
 class Finish(str, Enum):
@@ -25,19 +29,21 @@ class ChatMessage(BaseModel):
     content: str
 
 class ToolMessage(BaseModel):
-    role: Optional[Role]
+    role: Literal['function','tool'] = 'tool'
     content: str
     name: str
-    
+
+class AssistantMessage(BaseModel):
+    role: Literal['assistant'] = 'assistant'
+    content: str|None =None
+    function_call: Function|None = None
+
 ChatCompletionMessages = Union[
     ChatMessage,
     ToolMessage,
+    AssistantMessage,
+
 ]
-
-
-class Function(BaseModel):
-    name: str
-    arguments: str
 
 
 class FunctionCall(BaseModel):
