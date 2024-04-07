@@ -9,7 +9,7 @@ run.py --> FastAPI app
 
 SysPrompt --> System prompt setting.
 
-Tool.py --> Tools definition.
+Funcs.py --> Tools definition and Tool_map generation.
 
 tools.josn  -->  tool description.
 
